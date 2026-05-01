@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../widgets/custom_loader.dart';
+import 'verify_email_screen.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
@@ -41,7 +43,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       password: _passwordController.text.trim(),
     );
 
-    if (!success && mounted) {
+    if (success && mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const VerifyEmailScreen()),
+        (route) => false,
+      );
+    } else if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(authProvider.errorMessage ?? AppStrings.errorGeneral),
@@ -205,7 +213,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                       child: authProvider.isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
+                          ? const CustomLoader(color: Colors.white)
                           : Text(
                               AppStrings.register,
                               style: const TextStyle(

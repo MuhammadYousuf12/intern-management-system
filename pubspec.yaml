@@ -18,6 +18,7 @@ dependencies:
   responsive_framework: ^1.5.1
   shared_preferences: ^2.5.5
   shimmer: ^3.0.0
+  flutter_masked_text2: ^0.9.1
 
 dev_dependencies:
   flutter_test:

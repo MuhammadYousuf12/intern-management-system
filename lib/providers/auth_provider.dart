@@ -47,6 +47,13 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // --- Reload User ---
+  Future<void> reloadUser() async {
+    await _authService.currentUser?.reload();
+    _user = _authService.currentUser;
+    notifyListeners();
+  }
+
   // --- Login ---
   Future<bool> login({required String email, required String password}) async {
     _setLoading(true);

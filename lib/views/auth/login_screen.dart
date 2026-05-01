@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/custom_loader.dart';
 import 'register_screen.dart';
 
 // Login screen - entry point for both admin and intern.
@@ -178,7 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       child: authProvider.isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
+                          ? const CustomLoader(color: Colors.white)
                           : Text(
                               AppStrings.signIn,
                               style: const TextStyle(

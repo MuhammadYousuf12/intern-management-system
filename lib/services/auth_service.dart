@@ -26,6 +26,8 @@ class AuthService {
     );
 
     // Save user profile in Firestore with role as intern by default
+    await credential.user!.updateDisplayName(fullName);
+
     await _firestore.collection('users').doc(credential.user!.uid).set({
       'fullName': fullName,
       'email': email,
@@ -36,7 +38,6 @@ class AuthService {
 
     // Send email varification
     await credential.user!.sendEmailVerification();
-
     return credential;
   }
 

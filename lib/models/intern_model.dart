@@ -54,7 +54,7 @@ class InternModel {
       "address": address,
       "education": education,
       "skills": skills,
-      "createdAt": createdAt,
+      "createdAt": Timestamp.fromDate(createdAt),
     };
   }
 }

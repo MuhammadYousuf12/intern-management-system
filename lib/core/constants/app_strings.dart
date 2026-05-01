@@ -38,7 +38,7 @@ class AppStrings {
   static const String internDashboard = "Intern Dashboard";
   static const String internTasks = "Intern Tasks";
   static const String allInterns = "All Interns";
-  static const String addIntern = "Add Intern";
+  static const String addTask = "Add Task";
 
   // --- Task Status ---
   static const String pending = "Pending";

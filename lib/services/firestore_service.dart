@@ -9,10 +9,14 @@ class FirestoreService {
 
   // --- Save or update intern profile ---
   Future<void> saveInternProfile(InternModel intern) async {
-    await _firestore
-        .collection('users')
-        .doc(intern.uid)
-        .set(intern.toFirestore(), SetOptions(merge: true));
+    try {
+      await _firestore
+          .collection('users')
+          .doc(intern.uid)
+          .set(intern.toFirestore(), SetOptions(merge: true));
+    } catch (e) {
+      throw Exception("Failed to save profile: $e");
+    }
   }
 
   // --- Get single intern by uid ---
@@ -32,6 +36,15 @@ class FirestoreService {
               .map((doc) => InternModel.fromFirestore(doc))
               .toList(),
         );
+  }
+
+  // --- Real-time stream for single intern profile updates ---
+  Stream<InternModel> getInternStream(String uid) {
+    return _firestore
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .map((doc) => InternModel.fromFirestore(doc));
   }
 
   // --- Update intern progress ---

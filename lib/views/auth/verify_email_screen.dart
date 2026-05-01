@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/custom_loader.dart';
 
 // Shown after registration — user must verify email before accessing the app.
 // Automatically checks verification status every 5 seconds.
@@ -34,7 +35,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
   Future<void> _checkVerification() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    await authProvider.user?.reload();
+    await authProvider.reloadUser();
     if (authProvider.user?.emailVerified == true && mounted) {
       _timer?.cancel();
       // Navigate to profile complete screen
@@ -101,10 +102,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                   const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.primary,
-                    ),
+                    child: CustomLoader(color: AppColors.primary),
                   ),
                   const SizedBox(width: 10),
                   Text(
@@ -121,9 +119,14 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                 height: 50,
                 child: OutlinedButton(
                   onPressed: () async {
+                    final authProvider = Provider.of<AuthProvider>(
+                      context,
+                      listen: false,
+                    );
+                    final messenger = ScaffoldMessenger.of(context);
                     await authProvider.resendVerificationEmail();
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                    if (mounted) {
+                      messenger.showSnackBar(
                         const SnackBar(
                           content: Text('Verification email sent again.'),
                         ),
@@ -146,7 +149,13 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
               // --- Logout ---
               TextButton(
-                onPressed: () => authProvider.logout(),
+                onPressed: () async {
+                  final authProvider = Provider.of<AuthProvider>(
+                    context,
+                    listen: false,
+                  );
+                  await authProvider.logout();
+                },
                 child: Text(
                   AppStrings.logout,
                   style: TextStyle(color: Colors.grey[600]),

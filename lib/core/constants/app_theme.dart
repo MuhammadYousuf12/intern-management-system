@@ -19,6 +19,12 @@ class AppTheme {
       foregroundColor: AppColors.lightText,
       elevation: 0,
     ),
+    inputDecorationTheme: InputDecorationTheme(
+      hintStyle: TextStyle(
+        color: AppColors.lightTextSecondary,
+        fontWeight: FontWeight.w100,
+      ),
+    ),
   );
 
   // --- Dark Theme ---
@@ -35,6 +41,12 @@ class AppTheme {
       backgroundColor: AppColors.darkBackground,
       foregroundColor: AppColors.darkText,
       elevation: 0,
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      hintStyle: TextStyle(
+        color: AppColors.darkTextSecondary,
+        fontWeight: FontWeight.w100,
+      ),
     ),
   );
 }
