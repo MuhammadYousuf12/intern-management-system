@@ -42,7 +42,7 @@ class InternProvider extends ChangeNotifier {
   Future<void> saveProfile(InternModel intern) async {
     _setLoading(true);
     try {
-      await _firestoreService.saveInternProfile(intern);
+      await _firestoreService.saveUserProfile(intern);
       _internProfile = intern;
       _errorMessage = null;
     } catch (e) {

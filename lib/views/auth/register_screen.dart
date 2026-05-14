@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../widgets/custom_loader.dart';
 import 'verify_email_screen.dart';
-import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../../providers/auth_provider.dart';
 
-// Registration screen — creates a new intern account.
+// Registration screen - creates a new intern account.
 // After registration, email verification is sent automatically.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -87,7 +87,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Create your account to get started.',
+                    "Create your account to get started.",
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppColors.lightTextSecondary,
                     ),
@@ -124,7 +124,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return AppStrings.errorEmptyField;
-                      } else if (!value.contains('@')) {
+                      } else if (!value.contains("@")) {
                         return AppStrings.errorInvalidEmail;
                       }
                       return null;

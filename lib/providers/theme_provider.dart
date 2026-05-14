@@ -11,11 +11,11 @@ class ThemeProvider extends ChangeNotifier {
   // Loads saved theme preference from local storage.
   Future<void> loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedTheme = prefs.getString('theme_mode') ?? 'system';
+    final savedTheme = prefs.getString("theme_mode") ?? "system";
 
-    if (savedTheme == 'light') {
+    if (savedTheme == "light") {
       _themeMode = ThemeMode.light;
-    } else if (savedTheme == 'dark') {
+    } else if (savedTheme == "dark") {
       _themeMode = ThemeMode.dark;
     } else {
       _themeMode = ThemeMode.system;
@@ -30,11 +30,11 @@ class ThemeProvider extends ChangeNotifier {
 
     final prefs = await SharedPreferences.getInstance();
     if (mode == ThemeMode.light) {
-      await prefs.setString('theme_mode', 'light');
+      await prefs.setString("theme_mode", "light");
     } else if (mode == ThemeMode.dark) {
-      await prefs.setString('theme_mode', 'dark');
+      await prefs.setString("theme_mode", "dark");
     } else {
-      await prefs.setString('theme_mode', 'system');
+      await prefs.setString("theme_mode", "system");
     }
   }
 }

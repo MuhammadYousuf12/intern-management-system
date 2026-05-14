@@ -2,15 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
+import '../shared/theme_settings_screen.dart';
+import '../../widgets/custom_loader.dart';
 import '../../models/intern_model.dart';
 import '../../models/task_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/firestore_service.dart';
-import '../../widgets/shimmer_loader.dart';
+import '../shared/edit_profile_screen.dart';
+import '../shared/task_detail_screen.dart';
 
 // Intern dashboard - real-time tasks and progress via Firestore streams.
-class InternDashboard extends StatelessWidget {
+class InternDashboard extends StatefulWidget {
   const InternDashboard({super.key});
+
+  @override
+  State<InternDashboard> createState() => _InternDashboardState();
+}
+
+class _InternDashboardState extends State<InternDashboard> {
+  InternModel? _currentProfile;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    FirestoreService().getInternStream(authProvider.user!.uid).listen((
+      profile,
+    ) {
+      if (mounted) setState(() => _currentProfile = profile);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +47,29 @@ class InternDashboard extends StatelessWidget {
       appBar: AppBar(
         title: Text(AppStrings.internDashboard),
         actions: [
+          // Edit profile
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            onPressed: _currentProfile == null
+                ? null
+                : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            EditProfileScreen(profile: _currentProfile!),
+                      ),
+                    );
+                  },
+          ),
+          IconButton(
+            icon: const Icon(Icons.palette_outlined),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ThemeSettingsScreen()),
+            ),
+          ),
+          // Logout
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
@@ -35,33 +83,22 @@ class InternDashboard extends StatelessWidget {
         stream: firestoreService.getInternStream(uid),
         builder: (context, internSnapshot) {
           if (!internSnapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CustomLoader());
           }
           final profile = internSnapshot.data!;
 
           return StreamBuilder<List<TaskModel>>(
             stream: firestoreService.getInternTasks(uid),
             builder: (context, taskSnapshot) {
-              if (!taskSnapshot.hasData) {
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      _buildHeader(profile, 0, 0, 0),
-                      const SizedBox(height: 24),
-                      const ShimmerList(itemCount: 4),
-                    ],
-                  ),
-                );
-              }
-
-              final tasks = taskSnapshot.data!;
+              final tasks = taskSnapshot.data ?? [];
               final completed = tasks
-                  .where((t) => t.status == 'completed')
+                  .where((t) => t.status == "completed")
                   .length;
-              final progress = tasks.isEmpty
+              final int progress = tasks.isEmpty
                   ? 0
-                  : ((completed / tasks.length) * 100).round();
+                  : (tasks.map((t) => t.progress).reduce((a, b) => a + b) /
+                            tasks.length)
+                        .round();
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -74,7 +111,7 @@ class InternDashboard extends StatelessWidget {
 
                     // --- Progress Bar ---
                     Text(
-                      'Overall Progress',
+                      "Overall Progress",
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -83,7 +120,7 @@ class InternDashboard extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: LinearProgressIndicator(
-                        value: tasks.isEmpty ? 0 : completed / tasks.length,
+                        value: progress / 100,
                         minHeight: 10,
                         backgroundColor: Colors.grey[200],
                         color: AppColors.primary,
@@ -91,7 +128,7 @@ class InternDashboard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$progress%',
+                      "$progress%",
                       style: const TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w600,
@@ -112,7 +149,7 @@ class InternDashboard extends StatelessWidget {
                             child: Padding(
                               padding: const EdgeInsets.all(32),
                               child: Text(
-                                'No tasks assigned yet.',
+                                "No tasks assigned yet.",
                                 style: TextStyle(color: Colors.grey[500]),
                               ),
                             ),
@@ -124,7 +161,11 @@ class InternDashboard extends StatelessWidget {
                             separatorBuilder: (_, _) =>
                                 const SizedBox(height: 10),
                             itemBuilder: (context, index) {
-                              return _TaskCard(task: tasks[index]);
+                              return _TaskCard(
+                                task: tasks[index],
+                                isAdmin: false,
+                                internUid: uid,
+                              );
                             },
                           ),
                   ],
@@ -154,7 +195,7 @@ class InternDashboard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Welcome, ${profile.fullName} 👋',
+            "Welcome, ${profile.fullName}",
             style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
@@ -164,11 +205,11 @@ class InternDashboard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              _statChip('$total', 'Tasks'),
+              _statChip("$total", "Tasks"),
               const SizedBox(width: 12),
-              _statChip('$completed', 'Done'),
+              _statChip("$completed", "Done"),
               const SizedBox(width: 12),
-              _statChip('$progress%', 'Progress'),
+              _statChip("$progress%", "Progress"),
             ],
           ),
         ],
@@ -205,7 +246,9 @@ class InternDashboard extends StatelessWidget {
 
 class _TaskCard extends StatelessWidget {
   final TaskModel task;
-  const _TaskCard({required this.task});
+  final bool isAdmin;
+  final String? internUid;
+  const _TaskCard({required this.task, this.isAdmin = false, this.internUid});
 
   Color _statusColor(String status) {
     switch (status) {
@@ -231,59 +274,74 @@ class _TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TaskDetailScreen(
+            task: task,
+            isAdmin: isAdmin,
+            internUid: internUid,
+          ),
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  task.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    task.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _statusColor(task.status).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  _statusLabel(task.status),
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: _statusColor(task.status),
-                    fontWeight: FontWeight.w500,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _statusColor(task.status).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    _statusLabel(task.status),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: _statusColor(task.status),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
+              ],
+            ),
+            if (task.description.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                task.description,
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
-          ),
-          if (task.description.isNotEmpty) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
-              task.description,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+              "Due: ${task.dueDate.day}/${task.dueDate.month}/${task.dueDate.year}",
+              style: TextStyle(fontSize: 11, color: Colors.grey[500]),
             ),
           ],
-          const SizedBox(height: 8),
-          Text(
-            'Due: ${task.dueDate.day}/${task.dueDate.month}/${task.dueDate.year}',
-            style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-          ),
-        ],
+        ),
       ),
     );
   }

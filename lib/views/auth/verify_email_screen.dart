@@ -6,7 +6,7 @@ import '../../core/constants/app_strings.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_loader.dart';
 
-// Shown after registration — user must verify email before accessing the app.
+// Shown after registration - user must verify email before accessing the app.
 // Automatically checks verification status every 5 seconds.
 class VerifyEmailScreen extends StatefulWidget {
   const VerifyEmailScreen({super.key});
@@ -39,7 +39,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     if (authProvider.user?.emailVerified == true && mounted) {
       _timer?.cancel();
       // Navigate to profile complete screen
-      Navigator.pushReplacementNamed(context, '/complete-profile');
+      Navigator.pushReplacementNamed(context, "/complete-profile");
     }
   }
 
@@ -87,7 +87,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                authProvider.user?.email ?? '',
+                authProvider.user?.email ?? "",
                 style: const TextStyle(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w600,
@@ -128,7 +128,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                     if (mounted) {
                       messenger.showSnackBar(
                         const SnackBar(
-                          content: Text('Verification email sent again.'),
+                          content: Text("Verification email sent again."),
                         ),
                       );
                     }

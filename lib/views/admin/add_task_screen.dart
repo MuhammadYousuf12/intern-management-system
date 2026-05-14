@@ -6,9 +6,10 @@ import '../../models/task_model.dart';
 import '../../services/firestore_service.dart';
 import '../../widgets/custom_loader.dart';
 
-// Admin screen to add a new task — assigned to all interns automatically.
+// Admin screen to add a new task - assigned to all interns automatically.
 class AddTaskScreen extends StatefulWidget {
-  const AddTaskScreen({super.key});
+  final String? specificInternUid;
+  const AddTaskScreen({super.key, this.specificInternUid});
 
   @override
   State<AddTaskScreen> createState() => _AddTaskScreenState();
@@ -21,6 +22,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   DateTime _dueDate = DateTime.now().add(const Duration(days: 7));
   bool _isLoading = false;
   final _firestoreService = FirestoreService();
+  final _fireStore = FirebaseFirestore.instance;
 
   @override
   void dispose() {
@@ -34,26 +36,49 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Fetch all interns
-      final snapshot = await FirebaseFirestore.instance
-          .collection("users")
-          .where("role", isEqualTo: "intern")
-          .get();
+      // Generate one unique ID for this task group
+      final taskGroupId = _fireStore.collection('tasks').doc().id;
 
-      // Assign task to every intern
-      for (final doc in snapshot.docs) {
+      if (widget.specificInternUid != null) {
+        // Assign to specific intern only
         final task = TaskModel(
           taskId: "",
+          taskGroupId: taskGroupId,
           title: _titleController.text.trim(),
           description: _descriptionController.text.trim(),
           status: "pending",
-          assignedTo: doc.id,
+          assignedTo: widget.specificInternUid!,
+          progress: 0,
+          progressNote: "",
           dueDate: _dueDate,
           createdAt: DateTime.now(),
+          isCustomized: false,
         );
         await _firestoreService.addTask(task);
-      }
+      } else {
+        // Assign to all interns
+        final snapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .where('role', isEqualTo: 'intern')
+            .get();
 
+        for (final doc in snapshot.docs) {
+          final task = TaskModel(
+            taskId: "",
+            taskGroupId: taskGroupId,
+            title: _titleController.text.trim(),
+            description: _descriptionController.text.trim(),
+            status: "pending",
+            assignedTo: doc.id,
+            progress: 0,
+            progressNote: "",
+            dueDate: _dueDate,
+            createdAt: DateTime.now(),
+            isCustomized: false,
+          );
+          await _firestoreService.addTask(task);
+        }
+      }
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
@@ -69,7 +94,13 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Add Task")),
+      appBar: AppBar(
+        title: Text(
+          widget.specificInternUid != null
+              ? "Assign Task to Intern"
+              : "Add Task to All Interns",
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -161,8 +192,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                   child: _isLoading
                       ? const CustomLoader(color: Colors.white)
-                      : const Text(
-                          "Assign to All Interns",
+                      : Text(
+                          widget.specificInternUid != null
+                              ? "Assign Task"
+                              : "Assign to All Interns",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,

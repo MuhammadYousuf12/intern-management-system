@@ -1,11 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:intern_management_system/widgets/custom_loader.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'core/constants/app_theme.dart';
 import 'providers/theme_provider.dart';
 import 'providers/auth_provider.dart';
+import 'widgets/custom_loader.dart';
 import 'providers/intern_provider.dart';
 import 'views/auth/login_screen.dart';
 import 'views/auth/verify_email_screen.dart';
@@ -50,9 +50,9 @@ class MyApp extends StatelessWidget {
       themeMode: themeProvider.themeMode,
       home: const AuthWrapper(),
       routes: {
-        '/complete-profile': (_) => const CompleteProfileScreen(),
-        '/intern-dashboard': (_) => const InternDashboard(),
-        '/admin-dashboard': (_) => const AdminDashboard(),
+        "/complete-profile": (_) => const CompleteProfileScreen(),
+        "/intern-dashboard": (_) => const InternDashboard(),
+        "/admin-dashboard": (_) => const AdminDashboard(),
       },
     );
   }
@@ -80,19 +80,17 @@ class AuthWrapper extends StatelessWidget {
         if (!snapshot.hasData) {
           return const Scaffold(body: Center(child: CustomLoader()));
         }
-        if (snapshot.data == 'admin') return const AdminDashboard();
+        if (snapshot.data == "admin") return const AdminDashboard();
 
         // Check if intern profile is complete
         return FutureBuilder<DocumentSnapshot>(
           future: FirebaseFirestore.instance
-              .collection('users')
+              .collection("users")
               .doc(authProvider.user!.uid)
               .get(),
           builder: (context, profileSnapshot) {
             if (!profileSnapshot.hasData) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
+              return const Scaffold(body: Center(child: CustomLoader()));
             }
             final data = profileSnapshot.data!.data() as Map<String, dynamic>;
             final phone = data["phone"] ?? "";

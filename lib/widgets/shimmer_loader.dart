@@ -27,7 +27,7 @@ class ShimmerCard extends StatelessWidget {
   }
 }
 
-// Shimmer list — shows multiple shimmer cards while data loads.
+// Shimmer list - shows multiple shimmer cards while data loads.
 class ShimmerList extends StatelessWidget {
   final int itemCount;
   final double itemHeight;
